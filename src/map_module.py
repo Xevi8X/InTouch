@@ -53,6 +53,9 @@ class MapHandler:
         # Add heatmap if enabled
         if self.heatmap_enabled:
             self._add_heatmap()
+        
+        # Add mouse coordinate display
+        self._add_mouse_coordinates()
             
         self._update_map_display()
 
@@ -65,7 +68,11 @@ class MapHandler:
                 location=[person["lat"], person["lon"]],
                 popup=folium.Popup(f"<b>{person['name']}</b><br>{person['info']}", max_width=200),
                 tooltip=person['name'],
-                icon=folium.Icon(color="green", icon="user")
+                icon=folium.DivIcon(
+                    html='<div style="font-size: 20px; color: green; text-align: center;">▲</div>',
+                    icon_size=(20, 20),
+                    icon_anchor=(10, 10)
+                )
             ).add_to(self.m)
 
         # Dodawanie znaczników dla dodatkowych aktorów
@@ -73,28 +80,26 @@ class MapHandler:
             # Determine color based on actor type
             if actor["type"] == ActorType.DOCTOR:
                 color = "blue"
-                icon_name = "plus"
             elif actor["type"] == ActorType.FIREFIGHTER:
                 color = "orange"
-                icon_name = "fire"
             elif actor["type"] == ActorType.VEHICLE:
                 color = "cadetblue"
-                icon_name = "truck"
             elif actor["type"] == ActorType.DRONE:
                 color = "purple"
-                icon_name = "plane"
             elif actor["type"] == ActorType.DOG:
                 color = "darkgreen"
-                icon_name = "paw"
             else:
                 color = "gray"
-                icon_name = "info-sign"
             
             folium.Marker(
                 location=[actor["lat"], actor["lon"]],
                 popup=folium.Popup(f"<b>{actor['name']}</b><br>{actor['info']}", max_width=200),
                 tooltip=actor['name'],
-                icon=folium.Icon(color=color, icon=icon_name)
+                icon=folium.DivIcon(
+                    html=f'<div style="font-size: 20px; color: {color}; text-align: center;">▲</div>',
+                    icon_size=(20, 20),
+                    icon_anchor=(10, 10)
+                )
             ).add_to(self.m)
 
     def _add_heatmap(self):
@@ -221,4 +226,42 @@ class MapHandler:
             self._render_map_with_current_style()
         else:
             print(f"Nieznany styl mapy: {style_name}")
+
+    def _add_mouse_coordinates(self):
+        """Add mouse coordinate display to the map"""
+        coordinate_html = """
+        <div id='coordinate-display' style='
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            z-index: 1000;
+            pointer-events: none;
+        '>
+            Współrzędne: ---, ---
+        </div>
+        
+        <script>
+        var map = window[Object.keys(window).find(key => key.startsWith('map_'))];
+        var coordinateDisplay = document.getElementById('coordinate-display');
+        
+        map.on('mousemove', function(e) {
+            var lat = e.latlng.lat.toFixed(6);
+            var lng = e.latlng.lng.toFixed(6);
+            coordinateDisplay.innerHTML = 'Współrzędne: ' + lat + ', ' + lng;
+        });
+        
+        map.on('mouseout', function(e) {
+            coordinateDisplay.innerHTML = 'Współrzędne: ---, ---';
+        });
+        </script>
+        """
+        
+        # Add the HTML to the map
+        self.m.get_root().html.add_child(folium.Element(coordinate_html))
 
