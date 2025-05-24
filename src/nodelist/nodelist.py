@@ -34,19 +34,24 @@ class NodeListItem(QWidget):
         self.setLayout(main_layout)
 
 class NodeList(QWidget):
-    def __init__(self, state: State):
+    def __init__(self, state: State, center_callback=None):
         super().__init__()
         self.state = state
+        self.center_callback = center_callback
         self.layout = QVBoxLayout(self)
         self.list_widget = QListWidget()
         self.layout.addWidget(self.list_widget)
+        self.refresh()
+
+    def set_center_callback(self, callback):
+        self.center_callback = callback
         self.refresh()
 
     def refresh(self):
         self.list_widget.clear()
         for node in self.state.nodes:
             item = QListWidgetItem()
-            widget = NodeListItem(node)
+            widget = NodeListItem(node, self.center_callback)
             item.setSizeHint(widget.sizeHint())
             self.list_widget.addItem(item)
             self.list_widget.setItemWidget(item, widget)
