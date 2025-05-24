@@ -3,7 +3,7 @@ from folium.plugins import HeatMap
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 import numpy as np
 
-from src.static_data import people_points, fire_coords, additional_actors
+from src.static_data import people_points, fire_coords, ActorType, additional_actors
 
 
 class MapHandler:
@@ -47,19 +47,19 @@ class MapHandler:
             tiles=style_config["tiles"],
             attr=style_config["attr"]
         )
+        
         self._add_base_layers()
+        
+        # Add heatmap if enabled
+        if self.heatmap_enabled:
+            self._add_heatmap()
+            
         self._update_map_display()
 
-        folium.Circle(
-            location=fire_coords,
-            radius=20,
-            color='darkred',
-            fill=True,
-            fill_color='red',
-            fill_opacity=0.6,
-            popup="<b>Obszar Pożaru</b><br>Wykryto pożar!"
-        ).add_to(self.m)
+    def _add_base_layers(self):
+        """Add base map layers (fire area, markers)"""
 
+        # Dodawanie znaczników dla osób
         for person in people_points:
             folium.Marker(
                 location=[person["lat"], person["lon"]],
@@ -68,13 +68,54 @@ class MapHandler:
                 icon=folium.Icon(color="green", icon="user")
             ).add_to(self.m)
 
+        # Dodawanie znaczników dla dodatkowych aktorów
         for actor in additional_actors:
+            # Determine color based on actor type
+            if actor["type"] == ActorType.DOCTOR:
+                color = "blue"
+                icon_name = "plus"
+            elif actor["type"] == ActorType.FIREFIGHTER:
+                color = "orange"
+                icon_name = "fire"
+            elif actor["type"] == ActorType.VEHICLE:
+                color = "cadetblue"
+                icon_name = "truck"
+            elif actor["type"] == ActorType.DRONE:
+                color = "purple"
+                icon_name = "plane"
+            elif actor["type"] == ActorType.DOG:
+                color = "darkgreen"
+                icon_name = "paw"
+            else:
+                color = "gray"
+                icon_name = "info-sign"
+            
             folium.Marker(
                 location=[actor["lat"], actor["lon"]],
                 popup=folium.Popup(f"<b>{actor['name']}</b><br>{actor['info']}", max_width=200),
                 tooltip=actor['name'],
-                icon=folium.CustomIcon(actor["icon"])
+                icon=folium.Icon(color=color, icon=icon_name)
             ).add_to(self.m)
+
+    def _add_heatmap(self):
+        """Add heatmap layer to the current map"""
+        heatmap_data = self._create_grid_heatmap_data()
+        HeatMap(
+            heatmap_data,
+            min_opacity=0.3,  # Higher minimum opacity
+            max_zoom=20,
+            radius=35,  # Larger radius for smoother coverage
+            blur=20,    # More blur for gradient effect
+            gradient={
+                0.0: 'rgba(0, 255, 0, 0.0)',      # Transparent (no blue)
+                0.2: 'rgba(100, 255, 100, 0.4)',  # Light green
+                0.4: 'rgba(200, 255, 0, 0.6)',    # Yellow-green
+                0.6: 'rgba(255, 255, 0, 0.8)',    # Yellow
+                0.7: 'rgba(255, 200, 0, 0.85)',   # Orange
+                0.8: 'rgba(255, 100, 0, 0.9)',    # Red-orange
+                1.0: 'rgba(255, 0, 0, 0.95)'      # Red
+            }
+        ).add_to(self.m)
 
     def _create_grid_heatmap_data(self):
         """Create a grid-based heatmap covering the entire area with heat concentrated around points"""
@@ -163,32 +204,8 @@ class MapHandler:
     def toggle_heatmap(self, enabled):
         """Toggle heatmap visualization"""
         self.heatmap_enabled = enabled
-
-        # Recreate map to remove/add heatmap
-        self.m = folium.Map(location=fire_coords, zoom_start=16, tiles="Cartodb dark_matter")
-        self._add_base_layers()
-
-        if self.heatmap_enabled:
-            # Add grid-based heatmap layer
-            heatmap_data = self._create_grid_heatmap_data()
-            HeatMap(
-                heatmap_data,
-                min_opacity=0.3,  # Higher minimum opacity
-                max_zoom=20,
-                radius=35,  # Larger radius for smoother coverage
-                blur=20,    # More blur for gradient effect
-                gradient={
-                    0.0: 'rgba(0, 255, 0, 0.0)',      # Transparent (no blue)
-                    0.2: 'rgba(100, 255, 100, 0.4)',  # Light green
-                    0.4: 'rgba(200, 255, 0, 0.6)',    # Yellow-green
-                    0.6: 'rgba(255, 255, 0, 0.8)',    # Yellow
-                    0.7: 'rgba(255, 200, 0, 0.85)',   # Orange
-                    0.8: 'rgba(255, 100, 0, 0.9)',    # Red-orange
-                    1.0: 'rgba(255, 0, 0, 0.95)'      # Red
-                }
-            ).add_to(self.m)
-
-        self._update_map_display()
+        # Re-render the map with current style and heatmap state
+        self._render_map_with_current_style()
 
     def _update_map_display(self):
         """Update the web view with current map state"""
