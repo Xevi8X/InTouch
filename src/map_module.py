@@ -1,7 +1,7 @@
 import folium
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 
-from src.static_data import people_points, fire_coords, ActorType, additional_actors
+from src.static_data import people_points, fire_coords, additional_actors
 
 
 class MapHandler:
@@ -13,6 +13,17 @@ class MapHandler:
     def __init__(self, web_view: QWebEngineView):
         self.web_view = web_view
         self.m = None
+        # Definicja dostępnych stylów map z ich kafelkami i atrybucją
+        self.map_styles = {
+            "Strona Główna": {"tiles": "Cartodb dark_matter", "attr": "CartoDB"},
+            "Filtry": {"tiles": "Cartodb Positron", "attr": "CartoDB"},  # Styl "fossil map" - używamy Cartodb Positron
+            "Ostrzeżenia": {"tiles": "OpenStreetMap", "attr": "OpenStreetMap contributors"},
+            "Aktorzy": {"tiles": "Cartodb Positron", "attr": "CartoDB"},
+            "Zdarzenia": {"tiles": "Stamen Toner", "attr": "Stamen Toner"},
+            "Kanał": {"tiles": "Esri.WorldImagery",
+                      "attr": "Esri, DigitalGlobe, GeoEye, i-cubed, USDA FSA, USGS, AEX, Getmapping, Aerogrid, IGN, IGP, swisstopo, and the GIS User Community"}
+        }
+        self.current_style_name = "Strona Główna"  # Domyślny styl
         self.init_map()
 
     def init_map(self):
@@ -20,13 +31,23 @@ class MapHandler:
         Inicjalizuje mapę Folium z obszarem pożaru i znacznikami osób,
         a następnie ładuje ją do QWebEngineView.
         """
-        # Ustawienie centrum mapy na współrzędne pożaru dla lepszej widoczności
-        self.m = folium.Map(location=fire_coords, zoom_start=16, tiles="Cartodb dark_matter")
+        self._render_map_with_current_style()
 
-        # Rysowanie obszaru pożaru (okręgu)
+    def _render_map_with_current_style(self):
+        """
+        Renderuje mapę Folium z aktualnie wybranym stylem.
+        """
+        style_config = self.map_styles[self.current_style_name]
+        self.m = folium.Map(
+            location=fire_coords,
+            zoom_start=16,  # Poziom przybliżenia jest stały
+            tiles=style_config["tiles"],
+            attr=style_config["attr"]
+        )
+
         folium.Circle(
             location=fire_coords,
-            radius=20,  # Promień pożaru w metrach (20 m)
+            radius=20,
             color='darkred',
             fill=True,
             fill_color='red',
@@ -34,7 +55,6 @@ class MapHandler:
             popup="<b>Obszar Pożaru</b><br>Wykryto pożar!"
         ).add_to(self.m)
 
-        # Dodawanie znaczników dla osób
         for person in people_points:
             folium.Marker(
                 location=[person["lat"], person["lon"]],
@@ -43,7 +63,6 @@ class MapHandler:
                 icon=folium.Icon(color="green", icon="user")
             ).add_to(self.m)
 
-        # Dodawanie znaczników dla dodatkowych aktorów
         for actor in additional_actors:
             folium.Marker(
                 location=[actor["lat"], actor["lon"]],
@@ -54,3 +73,14 @@ class MapHandler:
 
         data = self.m._repr_html_()
         self.web_view.setHtml(data)
+
+    def update_map_style(self, style_name: str):
+        """
+        Zmienia styl mapy i ponownie ją renderuje.
+        """
+        if style_name in self.map_styles:
+            self.current_style_name = style_name
+            self._render_map_with_current_style()
+        else:
+            print(f"Nieznany styl mapy: {style_name}")
+
