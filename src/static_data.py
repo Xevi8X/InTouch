@@ -1,4 +1,4 @@
-from src.markers.markers import Marker, get_icons
+from src.markers.markers import Marker, get_icon_url
 
 detailed_events = [
     {

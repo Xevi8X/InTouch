@@ -1,4 +1,8 @@
 import sys
+from PyQt5.QtWidgets import QApplication, QWidget, QHBoxLayout
+
+from src.nodelist.nodelist import NodeList
+from src.state.state import State, create_fake_state
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QGridLayout
 from PyQt5.QtWebEngineWidgets import QWebEngineView
 from PyQt5.QtCore import Qt
@@ -38,7 +42,7 @@ class MapApp(QMainWindow):
         # Add the map and buttons widget to the main container
         self.map_container_layout.addWidget(self.map_and_buttons_widget)
 
-        self.main_layout.addWidget(self.map_container_widget, 3)
+        self.main_layout.addWidget(self.map_container_widget, 5)
 
         self.map_handler = MapHandler(self.web_view)
 
@@ -47,16 +51,42 @@ class MapApp(QMainWindow):
         self.button_panel_widget.heatmap_toggled.connect(self.map_handler.toggle_heatmap)
 
         self.info_panel = QVBoxLayout()
-        self.info_panel_widget = QWidget()
+        self.info_panel_widget = NodeList(create_fake_state())
         self.info_panel_widget.setLayout(self.info_panel)
-        self.info_panel_widget.setStyleSheet(
-            "background-color: #f0f8ff; border-left: 2px solid #a0a0a0; padding: 10px; border-radius: 5px;")
-
         self.main_layout.addWidget(self.info_panel_widget, 1)
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+
+    dark_stylesheet = """
+    QWidget {
+        background-color: #121212;
+        color: #ffffff;
+    }
+    QPushButton {
+        background-color: #1f1f1f;
+        border: 1px solid #333;
+        padding: 5px;
+    }
+    QPushButton:hover {
+        background-color: #323232;
+    }
+    """
+
+    app.setStyleSheet(dark_stylesheet)
+
+    window = QWidget()
+    window.setWindowTitle("InTouch")
+    window.resize(400, 300)
+
+    state = create_fake_state()
+    node_list = NodeList(state)
+    layout = QHBoxLayout()
+
+    layout.addWidget(node_list)
+    window.setLayout(layout)
+
     window = MapApp()
     window.show()
     sys.exit(app.exec_())

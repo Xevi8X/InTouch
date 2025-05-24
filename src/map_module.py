@@ -53,53 +53,29 @@ class MapHandler:
         # Add heatmap if enabled
         if self.heatmap_enabled:
             self._add_heatmap()
-        
-        # Add mouse coordinate display
-        self._add_mouse_coordinates()
             
         self._update_map_display()
 
     def _add_base_layers(self):
-        """Add base map layers (fire area, markers) - animation handled by JavaScript"""
+        """Add base map layers (fire area, markers)"""
 
-        # Dodawanie znaczników dla osób (static positions - animation in JavaScript)
-        for index, person in enumerate(people_points):
+        # Dodawanie znaczników dla osób
+        for person in people_points:
             folium.Marker(
                 location=[person["lat"], person["lon"]],
                 popup=folium.Popup(f"<b>{person['name']}</b><br>{person['info']}", max_width=200),
                 tooltip=person['name'],
-                icon=folium.DivIcon(
-                    html='<div style="font-size: 20px; color: green; text-align: center;">▲</div>',
-                    icon_size=(20, 20),
-                    icon_anchor=(10, 10)
-                )
+                icon=folium.Icon(color="green", icon="user")
             ).add_to(self.m)
 
-        # Dodawanie znaczników dla dodatkowych aktorów (static positions - animation in JavaScript)
-        for index, actor in enumerate(additional_actors):
-            # Determine color based on actor type
-            if actor["type"] == ActorType.DOCTOR:
-                color = "blue"
-            elif actor["type"] == ActorType.FIREFIGHTER:
-                color = "orange"
-            elif actor["type"] == ActorType.VEHICLE:
-                color = "cadetblue"
-            elif actor["type"] == ActorType.DRONE:
-                color = "purple"
-            elif actor["type"] == ActorType.DOG:
-                color = "darkgreen"
-            else:
-                color = "gray"
-            
+        # Dodawanie znaczników dla dodatkowych aktorów
+        for actor in additional_actors:
+
             folium.Marker(
                 location=[actor["lat"], actor["lon"]],
                 popup=folium.Popup(f"<b>{actor['name']}</b><br>{actor['info']}", max_width=200),
                 tooltip=actor['name'],
-                icon=folium.DivIcon(
-                    html=f'<div style="font-size: 20px; color: {color}; text-align: center;">▲</div>',
-                    icon_size=(20, 20),
-                    icon_anchor=(10, 10)
-                )
+                icon=folium.CustomIcon(actor["icon"])
             ).add_to(self.m)
 
     def _add_heatmap(self):
@@ -245,48 +221,48 @@ class MapHandler:
         '>
             Współrzędne: ---, ---
         </div>
-        
+
         <script>
         // Wait for map to be fully loaded
         setTimeout(function() {
             var map = window[Object.keys(window).find(key => key.startsWith('map_'))];
             var coordinateDisplay = document.getElementById('coordinate-display');
-            
+
             if (!map) {
                 console.log('Map not found, retrying...');
                 return;
             }
-            
+
             map.on('mousemove', function(e) {
                 var lat = e.latlng.lat.toFixed(6);
                 var lng = e.latlng.lng.toFixed(6);
                 coordinateDisplay.innerHTML = 'Współrzędne: ' + lat + ', ' + lng;
             });
-            
+
             map.on('mouseout', function(e) {
                 coordinateDisplay.innerHTML = 'Współrzędne: ---, ---';
             });
-            
+
             // Real-time animation - only for firefighters and dogs
             var animationStartTime = Date.now();
             var animatedMarkers = [];
             var originalPositions = [];
-            
+
             // Collect only firefighter and dog markers for animation
             var markerIndex = 0;
             map.eachLayer(function(layer) {
                 if (layer instanceof L.Marker && layer.options.icon) {
                     var pos = layer.getLatLng();
                     var tooltip = layer.options.title || '';
-                    
+
                     // Check if this is a firefighter (orange) or dog (dark green) marker
-                    var isFirefighter = layer.options.icon.options && 
-                                       layer.options.icon.options.html && 
+                    var isFirefighter = layer.options.icon.options &&
+                                       layer.options.icon.options.html &&
                                        layer.options.icon.options.html.includes('color: orange');
-                    var isDog = layer.options.icon.options && 
-                               layer.options.icon.options.html && 
+                    var isDog = layer.options.icon.options &&
+                               layer.options.icon.options.html &&
                                layer.options.icon.options.html.includes('color: darkgreen');
-                    
+
                     if (isFirefighter || isDog) {
                         animatedMarkers.push(layer);
                         originalPositions.push({
@@ -299,39 +275,39 @@ class MapHandler:
                 }
                 markerIndex++;
             });
-            
+
             console.log('Found ' + animatedMarkers.length + ' markers to animate (firefighters and dogs only)');
-            
+
             function animateMarkers() {
                 var currentTime = Date.now();
                 var elapsed = (currentTime - animationStartTime) / 1000; // seconds
-                
+
                 animatedMarkers.forEach(function(marker, index) {
                     if (originalPositions[index]) {
                         var original = originalPositions[index];
-                        
+
                         // Create unique animation for each marker
                         var timeOffset = index * 1.5; // Different phase for each marker
                         var animationSpeed = 0.3; // Animation speed
                         var movementRadius = 0.0001; // Movement radius (~10 meters)
-                        
+
                         var angle = (elapsed * animationSpeed + timeOffset) % (2 * Math.PI);
-                        
+
                         var latOffset = movementRadius * Math.sin(angle);
                         var lngOffset = movementRadius * Math.cos(angle);
-                        
+
                         var newLat = original.lat + latOffset;
                         var newLng = original.lng + lngOffset;
-                        
+
                         // Update marker position smoothly
                         marker.setLatLng([newLat, newLng]);
                     }
                 });
-                
+
                 // Continue animation
                 requestAnimationFrame(animateMarkers);
             }
-            
+
             // Start animation
             if (animatedMarkers.length > 0) {
                 console.log('Starting animation for firefighters and dogs...');
@@ -339,11 +315,11 @@ class MapHandler:
             } else {
                 console.log('No firefighter or dog markers found to animate');
             }
-            
+
         }, 2000); // Wait 2 seconds for everything to load
         </script>
         """
-        
+
         # Add the HTML to the map
         self.m.get_root().html.add_child(folium.Element(coordinate_html))
 
