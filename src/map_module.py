@@ -68,7 +68,7 @@ class MapHandler:
                 location=[actor["lat"], actor["lon"]],
                 popup=folium.Popup(f"<b>{actor['name']}</b><br>{actor['info']}", max_width=200),
                 tooltip=actor['name'],
-                icon=folium.Icon(color=actor["color"], icon=actor["icon"])
+                icon=folium.CustomIcon(actor["icon"])
             ).add_to(self.m)
 
         data = self.m._repr_html_()

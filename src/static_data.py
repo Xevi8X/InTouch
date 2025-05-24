@@ -1,3 +1,5 @@
+from src.markers.markers import Marker, get_icons
+
 detailed_events = [
     {
         "type": "Ranny człowiek",
@@ -53,9 +55,9 @@ class ActorType(enum.Enum):
     DOG = "Pies"
 
 additional_actors = [
-    {"type": ActorType.DOCTOR, "lat": 52.2505, "lon": 21.1010, "name": "Lekarz A", "info": "Przybył na miejsce", "icon": "plus", "color": "blue"}, # Outside
-    {"type": ActorType.VEHICLE, "lat": 52.2490, "lon": 21.0980, "name": "Wóz strażacki 1", "info": "Na stanowisku", "icon": "truck", "color": "cadetblue"}, # Outside
-    {"type": ActorType.DRONE, "lat": 52.2500, "lon": 21.1000, "name": "Dron 1", "info": "Monitoruje teren", "icon": "drone", "color": "purple"}, # Inside (at fire center)
-    {"type": ActorType.FIREFIGHTER, "lat": 52.2498, "lon": 21.1002, "name": "Strażak Kowalski", "info": "Akcja gaśnicza", "icon": "person", "color": "orange"}, # Inside
-    {"type": ActorType.DOG, "lat": 52.2501, "lon": 21.0998, "name": "Pies ratowniczy Burek", "info": "Szuka poszkodowanych", "icon": "dog", "color": "darkgreen"} # Inside
+    {"type": ActorType.DOCTOR, "lat": 52.2505, "lon": 21.1010, "name": "Lekarz A", "info": "Przybył na miejsce", "icon": get_icons(Marker.PARAMEDIC)}, # Outside
+    {"type": ActorType.VEHICLE, "lat": 52.2490, "lon": 21.0980, "name": "Wóz strażacki 1", "info": "Na stanowisku", "icon": get_icons(Marker.FIRETRUCK)}, # Outside
+    {"type": ActorType.DRONE, "lat": 52.2500, "lon": 21.1000, "name": "Dron 1", "info": "Monitoruje teren", "icon": get_icons(Marker.UAV)}, # Inside (at fire center)
+    {"type": ActorType.FIREFIGHTER, "lat": 52.2498, "lon": 21.1002, "name": "Strażak Kowalski", "info": "Akcja gaśnicza", "icon": get_icons(Marker.FIREFIGHTER)}, # Inside
+    {"type": ActorType.DOG, "lat": 52.2501, "lon": 21.0998, "name": "Pies ratowniczy Burek", "info": "Szuka poszkodowanych", "icon": get_icons(Marker.DOG)}
 ]

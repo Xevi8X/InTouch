@@ -13,13 +13,13 @@ class Marker(Enum):
     PARAMEDIC = auto()
     UAV = auto()
 
-def get_icon(marker: Marker) -> str:
+def get_icons(marker: Marker) -> str:
     """Returns the icon associated with the given marker."""
     icons = {
         Marker.AMBULANCE:   _load_icon("ambulance.png"),
         Marker.DOG:         _load_icon("dog.png"),
         Marker.FIRETRUCK:   _load_icon("firetruck.png"),
-        Marker.FIREFIGHTER: _load_icon("firefighter.png"),
+        Marker.FIREFIGHTER: _load_icon("fireman.png"),
         Marker.PARAMEDIC:   _load_icon("paramedic.png"),
         Marker.UAV:         _load_icon("uav.png"),
     }
@@ -34,4 +34,4 @@ def _load_icon(image_path: str) -> str:
     except FileNotFoundError:
         print(f"Icon file {image_path} not found at {full_path}.")
         return ""
-    
+
