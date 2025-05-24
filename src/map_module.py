@@ -70,31 +70,12 @@ class MapHandler:
 
         # Dodawanie znaczników dla dodatkowych aktorów
         for actor in additional_actors:
-            # Determine color based on actor type
-            if actor["type"] == ActorType.DOCTOR:
-                color = "blue"
-                icon_name = "plus"
-            elif actor["type"] == ActorType.FIREFIGHTER:
-                color = "orange"
-                icon_name = "fire"
-            elif actor["type"] == ActorType.VEHICLE:
-                color = "cadetblue"
-                icon_name = "truck"
-            elif actor["type"] == ActorType.DRONE:
-                color = "purple"
-                icon_name = "plane"
-            elif actor["type"] == ActorType.DOG:
-                color = "darkgreen"
-                icon_name = "paw"
-            else:
-                color = "gray"
-                icon_name = "info-sign"
-            
+
             folium.Marker(
                 location=[actor["lat"], actor["lon"]],
                 popup=folium.Popup(f"<b>{actor['name']}</b><br>{actor['info']}", max_width=200),
                 tooltip=actor['name'],
-                icon=folium.Icon(color=color, icon=icon_name)
+                icon=folium.CustomIcon(actor["icon"])
             ).add_to(self.m)
 
     def _add_heatmap(self):

@@ -25,7 +25,7 @@ def get_icon_path(marker: Marker) -> str:
         Marker.AMBULANCE:   "ambulance.png",
         Marker.DOG:         "dog.png",
         Marker.FIRETRUCK:   "firetruck.png",
-        Marker.FIREFIGHTER: "firefighter.png",
+        Marker.FIREFIGHTER: "fireman.png",
         Marker.PARAMEDIC:   "paramedic.png",
         Marker.UAV:         "uav.png",
     }
